@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Weather App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            text-align: center;
+            padding: 40px 15px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: auto;
+            padding: 25px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        input, button {
+            padding: 12px;
+            margin: 6px;
+            border: none;
+            border-radius: 8px;
+        }
+
+        input { width: 60%; }
+        button { cursor: pointer; background: white; }
+        #result { margin-top: 20px; }
+        #temperature { font-size: 40px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌤️ My Weather App</h1>
+        <p>Check the weather in your city</p>
+
+        <input id="city" type="text" placeholder="Enter city name">
+        <button onclick="getWeather()">Search</button>
+
+        <div id="result">
+            <p>Enter a city to see its weather.</p>
+        </div>
+    </div>
+
+    <script>
+        async function getWeather() {
+            const city = document.getElementById("city").value.trim();
+            const result = document.getElementById("result");
+
+            if (!city) {
+                result.innerHTML = "Please enter a city name.";
+                return;
+            }
+
+            result.innerHTML = "Loading weather...";
+
+            try {
+                const geoResponse = await fetch(
+                    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
+                );
+
+                const geoData = await geoResponse.json();
+
+                if (!geoData.results || geoData.results.length === 0) {
+                    result.innerHTML = "City not found. Try another name.";
+                    return;
+                }
+
+                const place = geoData.results[0];
+
+                const weatherResponse = await fetch(
+                    `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code`
+                );
+
+                const weatherData = await weatherResponse.json();
+                const weather = weatherData.current;
+
+                const descriptions = {
+                    0: "☀️ Clear sky",
+                    1: "🌤️ Mainly clear",
+                    2: "⛅ Partly cloudy",
+                    3: "☁️ Overcast",
+                    45: "🌫️ Fog",
+                    48: "🌫️ Fog",
+                    51: "🌦️ Light drizzle",
+                    61: "🌧️ Light rain",
+                    63: "🌧️ Moderate rain",
+                    65: "🌧️ Heavy rain",
+                    71: "❄️ Light snow",
+                    80: "🌦️ Rain showers",
+                    95: "⛈️ Thunderstorm"
+                };
+
+                const description =
+                    descriptions[weather.weather_code] || "🌍 Weather update";
+
+                result.innerHTML = `
+                    <h2>${place.name}, ${place.country || ""}</h2>
+                    <p id="temperature">${weather.temperature_2m}°C</p>
+                    <h3>${description}</h3>
+                    <p>🤗 Feels like: ${weather.apparent_temperature}°C</p>
+                    <p>💧 Humidity: ${weather.relative_humidity_2m}%</p>
+                    <p>💨 Wind: ${weather.wind_speed_10m} km/h</p>
+                `;
+            } catch (error) {
+                result.innerHTML =
+                    "Unable to get weather. Please check your internet connection.";
+            }
+        }
+
+        document.getElementById("city").addEventListener("keydown", function(event) {
+            if (event.key === "Enter") getWeather();
+        });
+    </script>
+</body>
+</html>

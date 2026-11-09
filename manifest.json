@@ -1,0 +1,9 @@
+{
+  "name": "My Weather App",
+  "short_name": "Weather",
+  "description": "Check current weather conditions",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2196f3"
+}
